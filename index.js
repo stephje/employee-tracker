@@ -13,10 +13,35 @@ connection.connect(function (err) {
     }
 });
 
-function initiate() {
+async function initiate() {
     console.log("success");
+
+    const answers = await inquirer.prompt([
+        {
+            type: "list",
+            message: "What do you want to do?",
+            choices: ["ADD", "VIEW", "UPDATE"],
+            name: "choice",
+        }
+    ])
+
+    switch (answers.choice) {
+        case "ADD":
+            console.log("add")
+            break;
+        case "VIEW":
+            console.log("view")
+            break;
+        case "UPDATE":
+            console.log("update")
+            break;
+    };
+
     connection.end();
+
 }
+
+
 
 //Rough breakdown of steps below: 
 // create database based on README instructions -- DONE

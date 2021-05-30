@@ -123,18 +123,15 @@ async function addNewDatabaseEntry(connection, answers) {
                     type: 'confirm',
                     message: 'Does this employee have a manager?',
                     name: 'hasManager',
-                    when(newEmployee) {
-                        return newEmployee.managerStatus === true;
-                    },
+                    when: newEmployee =>
+                        newEmployee.managerStatus === true,
                 },
                 {
                     type: 'list',
                     message: 'Manager:',
                     choices: managerArray,
                     name: 'manager',
-                    when(newEmployee) {
-                        return newEmployee.hasManager === true;
-                    },
+                    when: newEmployee => newEmployee.hasManager === true,
                 },
             ]);
 
@@ -165,8 +162,41 @@ function updateDatabaseEntry(connection, answers) {
     connection.end();
 }
 
-function viewDatabaseEntries(connection, answers) {
+async function viewDatabaseEntries(connection, answers) {
     console.log('view', answers);
+
+    switch (answers.type) {
+        case 'DEPARTMENT':
+            try {
+                //Get whole department table from database
+                const results = await connection.query('SELECT * from departments');
+                console.table(results[0]);
+            } catch (error) {
+                console.error(error);
+            }
+            break;
+
+        case 'ROLE':
+            try {
+                //Get whole results table from database
+                const results = await connection.query('SELECT * from roles');
+                console.table(results[0]);
+            } catch (error) {
+                console.error(error);
+            }
+            break;
+
+        case 'EMPLOYEE':
+            try {
+                //Get whole employee table from database
+                const results = await connection.query('SELECT * from employees');
+                console.table(results[0]);
+            } catch (error) {
+                console.error(error);
+            }
+            break;
+    };
+
     connection.end();
 }
 
@@ -226,8 +256,8 @@ main();
 //ask user if they want to view or update db entries -- DONE
 // Add departments, roles, employees -- DONE
 
-// View (departments, roles, employees)
-//prompt user to choose dept, role or employee
+//View (departments, roles, employees)
+//prompt user to choose dept, role or employee -- DONE
 //based on user choice, get list of depts, roles or employees from database
 
 // Update employee roles

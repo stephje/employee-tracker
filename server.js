@@ -269,6 +269,7 @@ async function initiate(connection) {
             message: 'What type of entry?',
             choices: ['EMPLOYEE', 'ROLE', 'DEPARTMENT'],
             name: 'type',
+            when: answers => (answers.action === 'ADD' || answers.action === 'VIEW'),
         },
     ]);
 

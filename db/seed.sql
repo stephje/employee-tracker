@@ -1,28 +1,35 @@
-DROP DATABASE IF EXISTS employeeDB;
-CREATE DATABASE employeeDB;
-USE employeeDB;
-CREATE TABLE departments (
-  id INT NOT NULL AUTO_INCREMENT,
-  department_name VARCHAR(100) NOT NULL,
-  PRIMARY KEY (id)
-);
-CREATE TABLE roles (
-  id INT NOT NULL AUTO_INCREMENT,
-  title VARCHAR(100) NOT NULL,
-  salary DECIMAL(8, 2) NOT NULL,
-  department_id INT NOT NULL,
-  -- FOREIGN KEY (department_id) REFERENCES departments(id),
-  PRIMARY KEY (id)
-);
-CREATE TABLE employees (
-  id INT NOT NULL AUTO_INCREMENT,
-  first_name VARCHAR(100) NOT NULL,
-  last_name VARCHAR(100) NOT NULL,
-  roles VARCHAR(100) NOT NULL,
-  manager VARCHAR(100) NOT NULL,
-  -- role_id INT NOT NULL,
-  -- FOREIGN KEY (role_id) REFERENCES roles(id),
-  -- manager_id INT NOT NULL,
-  -- FOREIGN KEY (manager_id) REFERENCES employees(id),
-  PRIMARY KEY (id)
-);
+INSERT INTO departments (department_name)
+VALUES ('IT');
+
+INSERT INTO departments (department_name)
+VALUES ('Finance');
+
+INSERT INTO roles (title, salary, department_id)
+VALUES ('Network Administrator', 1234, 1);
+
+INSERT INTO roles (title, salary, department_id)
+VALUES ('Systems Administrator', 1234, 1);
+
+INSERT INTO roles (title, salary, department_id)
+VALUES ('Network Engineer', 5678, 2);
+
+INSERT INTO roles (title, salary, department_id)
+VALUES ('Team Leader', 4567, 2);
+
+INSERT INTO employees (first_name, last_name, role_id, manager_status)
+VALUES ('John', 'Doe', 2, 1);
+
+INSERT INTO employees (first_name, last_name, role_id, manager_status)
+VALUES ('Jane', 'Smith', 4, 1);
+
+INSERT INTO employees (first_name, last_name, role_id, manager_id, manager_status)
+VALUES ('Stephanie', 'Jenkins', 1, 1, 0);
+
+INSERT INTO employees (first_name, last_name, role_id, manager_id, manager_status)
+VALUES ('Juliette', 'Fielding', 1, 2, 0);
+
+
+
+
+
+

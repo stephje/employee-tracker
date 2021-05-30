@@ -4,7 +4,6 @@ const inquirer = require('inquirer');
 
 //Add a new database entry
 async function addNewDatabaseEntry(connection, answers) {
-    console.log('add', answers);
 
     //Case depends on whether the user chose to update a department, role or employee
     switch (answers.type) {
@@ -153,24 +152,18 @@ async function addNewDatabaseEntry(connection, answers) {
                 console.error(error);
             }
             break;
-    }
-    connection.end();
-}
-
-function updateDatabaseEntry(connection, answers) {
-    console.log('update', answers);
+    };
     connection.end();
 }
 
 async function viewDatabaseEntries(connection, answers) {
-    console.log('view', answers);
 
     switch (answers.type) {
         case 'DEPARTMENT':
             try {
                 //Get whole department table from database
                 const results = await connection.query('SELECT * from departments');
-                console.table(results[0]);
+                table(results[0]);
             } catch (error) {
                 console.error(error);
             }
@@ -196,11 +189,65 @@ async function viewDatabaseEntries(connection, answers) {
             }
             break;
     };
+    connection.end();
+}
+
+async function updateDatabaseEntry(connection, answers) {
+    //get all roles from database
+    let rolesObject = await connection.query('SELECT * from roles');
+
+    //map query results into an array
+    let rolesArray = rolesObject[0].map(item => ({
+        name: item.title,
+        value: item.role_id,
+    }));
+
+    //get all roles from database
+    let employeeObject = await connection.query('SELECT * from employees');
+
+    //map query results into an array
+    let employeeArray = employeeObject[0].map(item => ({
+        name: `${item.first_name} ` + `${item.last_name}`,
+        value: item.employee_id,
+    }));
+
+    //prompt user to choose user to update and role to change to
+    const newEmployeeRole = await inquirer.prompt([
+        {
+            type: 'list',
+            choices: employeeArray,
+            message: 'Which employee do you want to update?',
+            name: 'employeeId',
+        },
+        {
+            type: 'list',
+            choices: rolesArray,
+            message: 'Change to which role?',
+            name: 'roleId',
+        },
+    ]);
+
+    console.log(newEmployeeRole);
+
+    try {
+        //Update the employee role
+        const results = await connection.query(
+            'UPDATE employees SET role_id = ? WHERE employee_id = ?',
+            [
+                newEmployeeRole.roleId, newEmployeeRole.employeeId
+            ]
+        );
+        //log how many entries have been updated (sanity check)
+        console.log('Entries updated:', results[0].affectedRows);
+    } catch (error) {
+        console.error(error);
+    }
 
     connection.end();
 }
 
 async function initiate(connection) {
+    //prompt user for what they want to do, and what time of entry to do it to
     const answers = await inquirer.prompt([
         {
             type: 'list',
@@ -213,22 +260,17 @@ async function initiate(connection) {
             message: 'What type of entry?',
             choices: ['EMPLOYEE', 'ROLE', 'DEPARTMENT'],
             name: 'type',
-            when: answers =>
-                answers.action === 'ADD' || answers.action === 'UPDATE',
         },
     ]);
 
     switch (answers.action) {
         case 'ADD':
-            console.log('add');
             addNewDatabaseEntry(connection, answers);
             break;
         case 'VIEW':
-            console.log('view');
             viewDatabaseEntries(connection, answers);
             break;
         case 'UPDATE':
-            console.log('update');
             updateDatabaseEntry(connection, answers);
             break;
     }
@@ -249,20 +291,3 @@ async function main() {
 
 // invoke main on start
 main();
-
-//Rough breakdown of steps below:
-//Create database based on README instructions -- DONE
-//Create DB connection -- DONE
-//ask user if they want to view or update db entries -- DONE
-// Add departments, roles, employees -- DONE
-
-//View (departments, roles, employees)
-//prompt user to choose dept, role or employee -- DONE
-//based on user choice, get list of depts, roles or employees from database
-
-// Update employee roles
-//prompt user for name of employee to update
-//ask them which field they want to update (first name, last name, manager name, role title)
-//prompt user to enter new value for that field
-//update db entry with user input
-

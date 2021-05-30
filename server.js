@@ -59,6 +59,14 @@ async function addNewDatabaseEntry(connection, answers) {
                     type: 'input',
                     message: 'What is the salary for this role?',
                     name: 'salary',
+                    validate(value) {
+                        //workaround for inquirer.js issue #866, see README
+                        let booleanValue = !isNaN(value)
+                        if (booleanValue === true) {
+                            return true;
+                        }
+                        return 'Please enter salary as a number';
+                    },
                 },
             ]);
 

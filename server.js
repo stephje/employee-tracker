@@ -136,10 +136,10 @@ async function addNewDatabaseEntry(connection, answers) {
                 },
                 {
                     type: 'list',
-                    message: 'Manager:',
+                    message: 'Please select employee\'s Manager:',
                     choices: managerArray,
                     name: 'manager',
-                    when: newEmployee => newEmployee.hasManager === true,
+                    when: newEmployee => (newEmployee.managerStatus === false || newEmployee.hasManager === true),
                 },
             ]);
 

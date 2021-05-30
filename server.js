@@ -4,11 +4,12 @@ const inquirer = require('inquirer');
 
 //Add a new database entry
 async function addNewDatabaseEntry(connection, answers) {
-    console.log("add", answers);
+    console.log('add', answers);
 
     //Case depends on whether the user chose to update a department, role or employee
     switch (answers.type) {
         case 'DEPARTMENT':
+            //prompt user for department name
             const newDepartment = await inquirer.prompt([
                 {
                     type: 'input',
@@ -18,34 +19,35 @@ async function addNewDatabaseEntry(connection, answers) {
             ]);
 
             try {
-                //Insert the new role into the database
+                //Insert the new department into the database
                 const results = await connection.query(
-                    "INSERT INTO departments (department_name) VALUES (?)",
+                    'INSERT INTO departments (department_name) VALUES (?)',
                     [newDepartment.name],
-                    function (err, results) {
-                        if (err) {
-                            console.error(err)
-                        } else {
-                            console.log("Department added", results)
-                        }
-                    }
                 );
-                console.log("Rows added:", results[0].affectedRows);
+                //log how many entries have been added (sanity check)
+                console.log('Entries added:', results[0].affectedRows);
             } catch (error) {
                 console.error(error);
-            };
+            }
             break;
 
         case 'ROLE':
+            //Need to add what department the role belongs to. In order to do that, first have to get current departments from database
             let departmentsObject = await connection.query(
                 'SELECT * from departments'
             );
-            let departmentsArray = departmentsObject[0].map(item => ({ name: item.department_name, value: item.department_id }));
+            //Map query results into an array. This will be used for "choices" in one of the Inquirer prompts
+            //As per Inquirer documentation, "choices" can take an object containing a name and a value. The name gets displayed to the user, and the value is saved in the answers object
+            let departmentsArray = departmentsObject[0].map(item => ({
+                name: item.department_name,
+                value: item.department_id,
+            }));
+            //Prompt for role title, department it is associated with, and salary
             const newRole = await inquirer.prompt([
                 {
                     type: 'input',
                     message: 'Role title:',
-                    name: 'title'
+                    name: 'title',
                 },
                 {
                     type: 'list',
@@ -57,51 +59,44 @@ async function addNewDatabaseEntry(connection, answers) {
                     type: 'input',
                     message: 'What is the salary for this role?',
                     name: 'salary',
-                }
+                },
             ]);
-            console.log(newRole);
 
             try {
                 //Insert the new role into the database
                 const results = await connection.query(
-                    "INSERT INTO roles (title, salary, department_id) VALUES (?, ?, ?)",
+                    'INSERT INTO roles (title, salary, department_id) VALUES (?, ?, ?)',
                     [newRole.title, newRole.salary, newRole.dept],
-                    function (err, results) {
-                        if (err) {
-                            console.error(err)
-                        } else {
-                            console.log("Role added", results)
-                        }
-                    }
                 );
-                console.log("Rows added:", results[0].affectedRows);
+                //log how many entries have been added (sanity check)
+                console.log('Entries added:', results[0].affectedRows);
             } catch (error) {
                 console.error(error);
-            };
+            }
             break;
 
         case 'EMPLOYEE':
+            //get all roles from database
+            let rolesObject = await connection.query('SELECT * from roles');
 
-            let rolesObject = await connection.query(
-                'SELECT * from roles'
-            );
+            //map query results into an array
+            let rolesArray = rolesObject[0].map(item => ({
+                name: item.title,
+                value: item.role_id,
+            }));
 
-            console.log(rolesObject[0])
-
-            let rolesArray = rolesObject[0].map(item => ({ name: item.title, value: item.role_id }));
-
-            console.log(rolesArray)
-
+            //get all managers from database
             let managersObject = await connection.query(
                 'SELECT * from employees WHERE manager_status = 1'
             );
 
-            console.log(managersObject[0])
+            //map query results to array
+            let managerArray = managersObject[0].map(item => ({
+                name: `${item.first_name} ` + `${item.last_name}`,
+                value: item.employee_id,
+            }));
 
-            let managerArray = managersObject[0].map(item => ({ name: (`${item.first_name} ` + `${item.last_name}`), value: item.employee_id }));
-
-            console.log(managerArray)
-
+            //prompt for first name, last name, role, whether they ARE a manager, whether they HAVE a manager, and if so what the manager's name is
             const newEmployee = await inquirer.prompt([
                 {
                     type: 'input',
@@ -129,8 +124,8 @@ async function addNewDatabaseEntry(connection, answers) {
                     message: 'Does this employee have a manager?',
                     name: 'hasManager',
                     when(newEmployee) {
-                        return newEmployee.managerStatus !== false;
-                    }
+                        return newEmployee.managerStatus === true;
+                    },
                 },
                 {
                     type: 'list',
@@ -138,45 +133,41 @@ async function addNewDatabaseEntry(connection, answers) {
                     choices: managerArray,
                     name: 'manager',
                     when(newEmployee) {
-                        return newEmployee.hasManager !== false;
-                    }
+                        return newEmployee.hasManager === true;
+                    },
                 },
             ]);
 
-            console.log(newEmployee);
-
             try {
-                //Insert the new role into the database
+                //Insert the new employee into the database
                 const results = await connection.query(
-                    "INSERT INTO employees (first_name, last_name, role_id, manager_id, manager_status) VALUES (?, ?, ?, ?, ?)",
-                    [newEmployee.firstName, newEmployee.lastName, newEmployee.role, newEmployee.manager, newEmployee.managerStatus],
-                    function (err, results) {
-                        if (err) {
-                            console.error(err)
-                        } else {
-                            console.log("Employee added", results)
-                        }
-                    }
+                    'INSERT INTO employees (first_name, last_name, role_id, manager_id, manager_status) VALUES (?, ?, ?, ?, ?)',
+                    [
+                        newEmployee.firstName,
+                        newEmployee.lastName,
+                        newEmployee.role,
+                        newEmployee.manager,
+                        newEmployee.managerStatus,
+                    ]
                 );
-                console.log("Rows added:", results[0].affectedRows);
+                //log how many entries have been added (sanity check)
+                console.log('Entries added:', results[0].affectedRows);
             } catch (error) {
                 console.error(error);
-            };
+            }
             break;
     }
     connection.end();
 }
 
 function updateDatabaseEntry(connection, answers) {
-    console.log("update", answers);
+    console.log('update', answers);
     connection.end();
-
 }
 
 function viewDatabaseEntries(connection, answers) {
-    console.log("view", answers);
+    console.log('view', answers);
     connection.end();
-
 }
 
 async function initiate(connection) {
@@ -213,9 +204,8 @@ async function initiate(connection) {
     }
 }
 
-//main function is invoked on start 
+//main function is invoked on start
 async function main() {
-
     const connection = await mysql.createConnection({
         host: 'localhost',
         port: 3306,
@@ -245,3 +235,4 @@ main();
 //ask them which field they want to update (first name, last name, manager name, role title)
 //prompt user to enter new value for that field
 //update db entry with user input
+

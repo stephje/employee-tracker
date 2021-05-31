@@ -11,10 +11,10 @@ INSERT INTO roles (title, salary, department_id)
 VALUES ('Systems Administrator', 60000, 1);
 
 INSERT INTO roles (title, salary, department_id)
-VALUES ('Network Engineer', 90000, 1);
+VALUES ('Lead Engineer', 90000, 1);
 
 INSERT INTO roles (title, salary, department_id)
-VALUES ('Team Leader', 80000, 2);
+VALUES ('Accountant', 80000, 2);
 
 INSERT INTO employees (first_name, last_name, role_id, manager_status)
 VALUES ('John', 'Doe', 2, 1);

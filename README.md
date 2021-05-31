@@ -59,3 +59,4 @@ Please ensure that you include the name of this project ("employee-tracker") in 
 
 ## Walkthrough
 
+A walkthrough video demonstrating the application functionality can be found [HERE](https://drive.google.com/file/d/1ohnJftfy5wW5Bjo5B-LFE5hEuNNo-bsr/view)

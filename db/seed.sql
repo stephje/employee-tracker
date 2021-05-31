@@ -5,16 +5,16 @@ INSERT INTO departments (department_name)
 VALUES ('Finance');
 
 INSERT INTO roles (title, salary, department_id)
-VALUES ('Network Administrator', 1234, 1);
+VALUES ('Network Administrator', 60000, 1);
 
 INSERT INTO roles (title, salary, department_id)
-VALUES ('Systems Administrator', 1234, 1);
+VALUES ('Systems Administrator', 60000, 1);
 
 INSERT INTO roles (title, salary, department_id)
-VALUES ('Network Engineer', 5678, 2);
+VALUES ('Network Engineer', 90000, 1);
 
 INSERT INTO roles (title, salary, department_id)
-VALUES ('Team Leader', 4567, 2);
+VALUES ('Team Leader', 80000, 2);
 
 INSERT INTO employees (first_name, last_name, role_id, manager_status)
 VALUES ('John', 'Doe', 2, 1);

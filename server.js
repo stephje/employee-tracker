@@ -238,8 +238,6 @@ async function updateDatabaseEntry(connection, answers) {
         },
     ]);
 
-    console.log(newEmployeeRole);
-
     try {
         // update the employee role
         const results = await connection.query(

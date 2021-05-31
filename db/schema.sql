@@ -1,11 +1,15 @@
 DROP DATABASE IF EXISTS employeeDB;
+
 CREATE DATABASE employeeDB;
+
 USE employeeDB;
+
 CREATE TABLE departments (
   department_id INT NOT NULL AUTO_INCREMENT,
   department_name VARCHAR(100) NOT NULL,
   PRIMARY KEY (department_id)
 );
+
 CREATE TABLE roles (
   role_id INT NOT NULL AUTO_INCREMENT,
   title VARCHAR(100) NOT NULL,
@@ -14,6 +18,7 @@ CREATE TABLE roles (
   FOREIGN KEY (department_id) REFERENCES departments(department_id),
   PRIMARY KEY (role_id)
 );
+
 CREATE TABLE employees (
   employee_id INT NOT NULL AUTO_INCREMENT,
   first_name VARCHAR(100) NOT NULL,

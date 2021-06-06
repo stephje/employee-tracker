@@ -1,10 +1,10 @@
-require('dotenv').config();
-const mysql = require('mysql2/promise');
 const table = require('console.table');
 const inquirer = require('inquirer');
+const { displayRoles } = require('./src/queries.js');
+const Queries = require('./src/queries.js')
 
 // add a new database entry
-async function addNewDatabaseEntry(connection, answers) {
+async function addNewDatabaseEntry(answers) {
 
     // case depends on whether the user chose to update a department, role or employee
     switch (answers.type) {
@@ -20,12 +20,9 @@ async function addNewDatabaseEntry(connection, answers) {
 
             try {
                 // insert the new department into the database
-                const results = await connection.query(
-                    'INSERT INTO departments (department_name) VALUES (?)',
-                    [newDepartment.name],
-                );
+                const results = await Queries.addDepartment([newDepartment.name]);
                 // log how many entries have been added (sanity check)
-                console.log('Entries added:', results[0].affectedRows);
+                console.log('Entries added:', results.affectedRows);
             } catch (error) {
                 console.error(error);
             }
@@ -33,12 +30,10 @@ async function addNewDatabaseEntry(connection, answers) {
 
         case 'ROLE':
             // need to add what department the role belongs to. In order to do that, first have to get current departments from database
-            let departmentsObject = await connection.query(
-                'SELECT * from departments'
-            );
+            let departmentsObject = await Queries.getDepartments();
             // map query results into an array. This will be used for "choices" in one of the Inquirer prompts
             // as per Inquirer documentation, "choices" can take an object containing a name and a value. The name gets displayed to the user, and the value is saved in the answers object
-            let departmentsArray = departmentsObject[0].map(item => ({
+            let departmentsArray = departmentsObject.map(item => ({
                 name: item.department_name,
                 value: item.department_id,
             }));
@@ -72,12 +67,9 @@ async function addNewDatabaseEntry(connection, answers) {
 
             try {
                 // Insert the new role into the database
-                const results = await connection.query(
-                    'INSERT INTO roles (title, salary, department_id) VALUES (?, ?, ?)',
-                    [newRole.title, newRole.salary, newRole.dept],
-                );
+                const results = await Queries.addRole([newRole.title, newRole.salary, newRole.dept]);
                 // log how many entries have been added (sanity check)
-                console.log('Entries added:', results[0].affectedRows);
+                console.log('Entries added:', results.affectedRows);
             } catch (error) {
                 console.error(error);
             }
@@ -85,22 +77,20 @@ async function addNewDatabaseEntry(connection, answers) {
 
         case 'EMPLOYEE':
             // get all roles from database
-            let rolesObject = await connection.query('SELECT * from roles');
+            let rolesObject = await Queries.getRoles();
 
             // map query results into an array
-            let rolesArray = rolesObject[0].map(item => ({
+            let rolesArray = rolesObject.map(item => ({
                 name: item.title,
                 value: item.role_id,
             }));
 
             // get all managers from database
-            let managersObject = await connection.query(
-                'SELECT * from employees WHERE manager_status = 1'
-            );
+            let managersObject = await Queries.getManagers();
 
             // map query results to array
-            let managerArray = managersObject[0].map(item => ({
-                name: `${item.first_name} ` + `${item.last_name}`,
+            let managerArray = managersObject.map(item => ({
+                name: `${item.first_name} ${item.last_name}`,
                 value: item.employee_id,
             }));
 
@@ -145,35 +135,33 @@ async function addNewDatabaseEntry(connection, answers) {
 
             try {
                 // insert the new employee into the database
-                const results = await connection.query(
-                    'INSERT INTO employees (first_name, last_name, role_id, manager_id, manager_status) VALUES (?, ?, ?, ?, ?)',
-                    [
-                        newEmployee.firstName,
-                        newEmployee.lastName,
-                        newEmployee.role,
-                        newEmployee.manager,
-                        newEmployee.managerStatus,
-                    ]
-                );
+                const results = await Queries.addEmployee([
+                    newEmployee.firstName,
+                    newEmployee.lastName,
+                    newEmployee.role,
+                    newEmployee.manager,
+                    newEmployee.managerStatus,
+                ]);
+                
                 // log how many entries have been added (sanity check)
-                console.log('Entries added:', results[0].affectedRows);
+                console.log('Entries added:', results.affectedRows);
             } catch (error) {
                 console.error(error);
             }
             break;
     };
-    connection.end();
+    main();
 }
 
 // view database entries
-async function viewDatabaseEntries(connection, answers) {
+async function viewDatabaseEntries(answers) {
 
     switch (answers.type) {
         case 'DEPARTMENT':
             try {
                 // get whole department table from database
-                const results = await connection.query('SELECT department_id as ID, department_name as department from departments');
-                console.table(results[0]);
+                const results = await Queries.displayDepartments();
+                console.table(results);
             } catch (error) {
                 console.error(error);
             }
@@ -182,8 +170,8 @@ async function viewDatabaseEntries(connection, answers) {
         case 'ROLE':
             try {
                 // get whole results table from database
-                const results = await connection.query('SELECT roles.role_id as ID, roles.title, roles.salary, departments.department_name as department FROM roles LEFT JOIN departments on (roles.department_id = departments.department_id);');
-                console.table(results[0]);
+                const results = await Queries.displayRoles();
+                console.table(results);
             } catch (error) {
                 console.error(error);
             }
@@ -192,33 +180,33 @@ async function viewDatabaseEntries(connection, answers) {
         case 'EMPLOYEE':
             try {
                 // get whole employee table from database
-                const results = await connection.query('SELECT e.employee_id as ID, e.first_name, e.last_name, r.title, d.department_name FROM employees as e LEFT JOIN roles as r on (e.role_id = r.role_id) LEFT JOIN departments as d on (r.department_id = d.department_id);');
-                console.table(results[0]);
+                const results = await Queries.displayEmployees();
+                console.table(results);
             } catch (error) {
                 console.error(error);
             }
             break;
     };
-    connection.end();
+    main();
 }
 
 // update database entries
 async function updateDatabaseEntry(connection, answers) {
     // get all roles from database
-    let rolesObject = await connection.query('SELECT * from roles');
+    let rolesObject = await Queries.getRoles();
 
     // map query results into an array
-    let rolesArray = rolesObject[0].map(item => ({
+    let rolesArray = rolesObject.map(item => ({
         name: item.title,
         value: item.role_id,
     }));
 
     // get all roles from database
-    let employeeObject = await connection.query('SELECT * from employees');
+    let employeeObject = await Queries.getEmployees();
 
     // map query results into an array
-    let employeeArray = employeeObject[0].map(item => ({
-        name: `${item.first_name} ` + `${item.last_name}`,
+    let employeeArray = employeeObject.map(item => ({
+        name: `${item.first_name} ${item.last_name}`,
         value: item.employee_id,
     }));
 
@@ -240,28 +228,23 @@ async function updateDatabaseEntry(connection, answers) {
 
     try {
         // update the employee role
-        const results = await connection.query(
-            'UPDATE employees SET role_id = ? WHERE employee_id = ?',
-            [
-                newEmployeeRole.roleId, newEmployeeRole.employeeId
-            ]
-        );
+        const results = await Queries.updateEmployeeRole([newEmployeeRole.roleId, newEmployeeRole.employeeId]);
         // log how many entries have been updated (sanity check)
-        console.log('Entries updated:', results[0].affectedRows);
+        console.log('Entries updated:', results.affectedRows);
     } catch (error) {
         console.error(error);
     }
 
-    connection.end();
+    main();
 }
 
-async function initiate(connection) {
+async function main() {
     // prompt user for what they want to do, and what time of entry to do it to
     const answers = await inquirer.prompt([
         {
             type: 'list',
             message: 'What do you want to do?',
-            choices: ['ADD', 'VIEW', 'UPDATE'],
+            choices: ['ADD', 'VIEW', 'UPDATE', 'QUIT'],
             name: 'action',
         },
         {
@@ -275,28 +258,18 @@ async function initiate(connection) {
 
     switch (answers.action) {
         case 'ADD':
-            addNewDatabaseEntry(connection, answers);
+            addNewDatabaseEntry(answers);
             break;
         case 'VIEW':
-            viewDatabaseEntries(connection, answers);
+            viewDatabaseEntries(answers);
             break;
         case 'UPDATE':
-            updateDatabaseEntry(connection, answers);
+            updateDatabaseEntry(answers);
+            break;
+        case 'QUIT':
+            Queries.quit();
             break;
     }
-}
-
-// main function is invoked on start
-async function main() {
-    const connection = await mysql.createConnection({
-        host: process.env.DB_HOST,
-        port: 3306,
-        user: process.env.DB_USER,
-        password: process.env.DB_PASS,
-        database: 'employeeDB',
-    });
-
-    initiate(connection);
 }
 
 // invoke main on start
